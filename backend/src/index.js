@@ -45,6 +45,12 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Sistem Akademik Cahaya Ilmu API is running' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// For local development
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+// Export for Vercel serverless function
+module.exports = app;
