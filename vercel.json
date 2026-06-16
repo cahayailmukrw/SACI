@@ -6,10 +6,10 @@
       "framework": "vite"
     },
     "backend": {
-      "root": ".",
-      "entrypoint": "api/index.js",
-      "routePrefix": "/",
-      "buildCommand": "cd backend && npm run build"
+      "root": "backend",
+      "entrypoint": "src/index.js",
+      "routePrefix": "/api",
+      "buildCommand": "npm run build"
     }
   }
 }

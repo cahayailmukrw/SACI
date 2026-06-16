@@ -25,23 +25,23 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/auth', authRoutes);
-app.use('/api/students', studentRoutes);
-app.use('/api/teachers', teacherRoutes);
-app.use('/api/classes', classRoutes);
-app.use('/api/subjects', subjectRoutes);
-app.use('/api/grades', gradeRoutes);
-app.use('/api/attendance', attendanceRoutes);
-app.use('/api/tahfidz', tahfidzRoutes);
-app.use('/api/schedules', scheduleRoutes);
-app.use('/api/prayer-schedules', prayerScheduleRoutes);
-app.use('/api/religious-activities', religiousActivityRoutes);
-app.use('/api/announcements', announcementRoutes);
-app.use('/api/report-cards', reportCardRoutes);
-app.use('/api/student-affairs', studentAffairRoutes);
-app.use('/api/extracurriculars', extracurricularRoutes);
+app.use('/auth', authRoutes);
+app.use('/students', studentRoutes);
+app.use('/teachers', teacherRoutes);
+app.use('/classes', classRoutes);
+app.use('/subjects', subjectRoutes);
+app.use('/grades', gradeRoutes);
+app.use('/attendance', attendanceRoutes);
+app.use('/tahfidz', tahfidzRoutes);
+app.use('/schedules', scheduleRoutes);
+app.use('/prayer-schedules', prayerScheduleRoutes);
+app.use('/religious-activities', religiousActivityRoutes);
+app.use('/announcements', announcementRoutes);
+app.use('/report-cards', reportCardRoutes);
+app.use('/student-affairs', studentAffairRoutes);
+app.use('/extracurriculars', extracurricularRoutes);
 
-app.get('/api/health', (req, res) => {
+app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Sistem Akademik Cahaya Ilmu API is running' });
 });
 
