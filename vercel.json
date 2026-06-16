@@ -1,5 +1,15 @@
 {
-  "buildCommand": "cd backend && npm run build",
-  "outputDirectory": "frontend/dist",
-  "installCommand": "cd backend && npm install && cd ../frontend && npm install"
+  "experimentalServices": {
+    "frontend": {
+      "root": "frontend",
+      "routePrefix": "/",
+      "framework": "vite"
+    },
+    "backend": {
+      "root": ".",
+      "entrypoint": "api/index.js",
+      "routePrefix": "/api",
+      "buildCommand": "cd backend && npm run build"
+    }
+  }
 }
