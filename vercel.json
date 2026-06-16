@@ -8,7 +8,7 @@
     "backend": {
       "root": ".",
       "entrypoint": "api/index.js",
-      "routePrefix": "/api",
+      "routePrefix": "/",
       "buildCommand": "cd backend && npm run build"
     }
   }
