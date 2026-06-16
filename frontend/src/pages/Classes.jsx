@@ -1,0 +1,350 @@
+import { useEffect, useState } from 'react'
+import axios from 'axios'
+import { Plus, Edit, Trash2 } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
+
+const Classes = () => {
+  const { user } = useAuth()
+  const [classes, setClasses] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showModal, setShowModal] = useState(false)
+  const [editingClass, setEditingClass] = useState(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [classToDelete, setClassToDelete] = useState(null)
+  const [teachers, setTeachers] = useState([])
+  const [educationLevelFilter, setEducationLevelFilter] = useState('')
+  const [formData, setFormData] = useState({
+    name: '',
+    gradeLevel: 1,
+    educationLevel: 'SD',
+    academicYear: '',
+    homeroomTeacherId: '',
+  })
+
+  useEffect(() => {
+    fetchClasses()
+    fetchTeachers()
+  }, [educationLevelFilter])
+
+  const fetchClasses = async () => {
+    try {
+      const params = educationLevelFilter ? { educationLevel: educationLevelFilter } : {}
+      const response = await axios.get('/api/classes', { params })
+      setClasses(response.data)
+    } catch (error) {
+      console.error('Error fetching classes:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchTeachers = async () => {
+    try {
+      const response = await axios.get('/api/teachers')
+      setTeachers(response.data)
+    } catch (error) {
+      console.error('Error fetching teachers:', error)
+    }
+  }
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData({ ...formData, [name]: value })
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    try {
+      if (editingClass) {
+        await axios.put(`/api/classes/${editingClass.id}`, formData)
+      } else {
+        await axios.post('/api/classes', formData)
+      }
+
+      fetchClasses()
+      setShowModal(false)
+      setEditingClass(null)
+      setFormData({
+        name: '',
+        gradeLevel: 1,
+        educationLevel: 'SD',
+        academicYear: '',
+        homeroomTeacherId: '',
+      })
+    } catch (error) {
+      console.error('Error saving class:', error)
+      alert('Gagal menyimpan data kelas')
+    }
+  }
+
+  const handleEdit = (classData) => {
+    setEditingClass(classData)
+    setFormData({
+      name: classData.name,
+      gradeLevel: classData.gradeLevel,
+      educationLevel: classData.educationLevel || 'SD',
+      academicYear: classData.academicYear,
+      homeroomTeacherId: classData.homeroomTeacherId || '',
+    })
+    setShowModal(true)
+  }
+
+  const handleDelete = async (id) => {
+    setClassToDelete(id)
+    setShowDeleteModal(true)
+  }
+
+  const confirmDelete = async () => {
+    try {
+      await axios.delete(`/api/classes/${classToDelete}`)
+      fetchClasses()
+      setShowDeleteModal(false)
+      setClassToDelete(null)
+    } catch (error) {
+      console.error('Error deleting class:', error)
+    }
+  }
+
+  const openAddModal = () => {
+    setEditingClass(null)
+    setFormData({
+      name: '',
+      gradeLevel: 1,
+      educationLevel: 'SD',
+      academicYear: '',
+      homeroomTeacherId: '',
+    })
+    setShowModal(true)
+  }
+
+  if (loading) {
+    return <div className="text-center py-8">Memuat data kelas...</div>
+  }
+
+  // Role-based access control
+  if (!['ADMIN', 'TEACHER'].includes(user?.role)) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-600">Anda tidak memiliki akses ke halaman ini.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Manajemen Kelas</h1>
+        <div className="flex space-x-3">
+          <select
+            value={educationLevelFilter}
+            onChange={(e) => setEducationLevelFilter(e.target.value)}
+            className="input-field"
+          >
+            <option value="">Semua Jenjang</option>
+            <option value="SD">SD</option>
+            <option value="SMP">SMP</option>
+            <option value="SMA">SMA</option>
+          </select>
+          <button onClick={openAddModal} className="btn-primary flex items-center space-x-2">
+            <Plus className="w-4 h-4" />
+            <span>Tambah Kelas</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {classes.map((classData) => (
+          <div key={classData.id} className="card">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">{classData.name}</h3>
+                <p className="text-sm text-gray-600">{classData.educationLevel} - Kelas {classData.gradeLevel}</p>
+              </div>
+              <div className="flex space-x-2">
+                <button onClick={() => handleEdit(classData)} className="p-2 text-blue-600 hover:bg-blue-50 rounded">
+                  <Edit className="w-4 h-4" />
+                </button>
+                <button onClick={() => handleDelete(classData.id)} className="p-2 text-red-600 hover:bg-red-50 rounded">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2 text-sm">
+              <div>
+                <span className="text-gray-600">Tahun Ajaran:</span>
+                <span className="ml-2 font-medium">{classData.academicYear}</span>
+              </div>
+              <div>
+                <span className="text-gray-600">Wali Kelas:</span>
+                <span className="ml-2 font-medium">
+                  {classData.homeroomTeacher?.user.name || '-'}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-600">Jumlah Siswa:</span>
+                <span className="ml-2 font-medium">{classData.students.length}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">
+              {editingClass ? 'Edit Kelas' : 'Tambah Kelas'}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nama Kelas
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                  className="input-field"
+                  placeholder="Contoh: Kelas 1A"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Jenjang Pendidikan
+                </label>
+                <select
+                  name="educationLevel"
+                  value={formData.educationLevel}
+                  onChange={handleInputChange}
+                  required
+                  className="input-field"
+                >
+                  <option value="SD">SD (Sekolah Dasar)</option>
+                  <option value="SMP">SMP (Sekolah Menengah Pertama)</option>
+                  <option value="SMA">SMA (Sekolah Menengah Atas)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tingkat Kelas
+                </label>
+                <select
+                  name="gradeLevel"
+                  value={formData.gradeLevel}
+                  onChange={handleInputChange}
+                  required
+                  className="input-field"
+                >
+                  {formData.educationLevel === 'SD' ? [1, 2, 3, 4, 5, 6].map((level) => (
+                    <option key={level} value={level}>
+                      Kelas {level}
+                    </option>
+                  )) : formData.educationLevel === 'SMP' ? [7, 8, 9].map((level) => (
+                    <option key={level} value={level}>
+                      Kelas {level}
+                    </option>
+                  )) : [10, 11, 12].map((level) => (
+                    <option key={level} value={level}>
+                      Kelas {level}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tahun Ajaran
+                </label>
+                <input
+                  type="text"
+                  name="academicYear"
+                  value={formData.academicYear}
+                  onChange={handleInputChange}
+                  required
+                  className="input-field"
+                  placeholder="Contoh: 2024/2025"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Wali Kelas
+                </label>
+                <select
+                  name="homeroomTeacherId"
+                  value={formData.homeroomTeacherId}
+                  onChange={handleInputChange}
+                  required
+                  className="input-field"
+                >
+                  <option value="">Pilih Wali Kelas</option>
+                  {teachers
+                    .filter(t => !formData.educationLevel || t.educationLevel === formData.educationLevel)
+                    .map((teacher) => (
+                      <option key={teacher.id} value={teacher.id}>
+                        {teacher.user.name} ({t.educationLevel})
+                      </option>
+                    ))}
+                </select>
+                {formData.educationLevel && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Hanya menampilkan guru jenjang {formData.educationLevel}
+                  </p>
+                )}
+              </div>
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowModal(false)
+                    setEditingClass(null)
+                    setFormData({
+                      name: '',
+                      gradeLevel: 1,
+                      educationLevel: 'SD',
+                      academicYear: '',
+                      homeroomTeacherId: '',
+                    })
+                  }}
+                  className="btn-secondary flex-1"
+                >
+                  Batal
+                </button>
+                <button type="submit" className="btn-primary flex-1">
+                  {editingClass ? 'Update' : 'Simpan'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Konfirmasi Hapus</h2>
+            <p className="text-gray-600 mb-6">
+              Apakah Anda yakin ingin menghapus kelas ini? Tindakan ini tidak dapat dibatalkan.
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false)
+                  setClassToDelete(null)
+                }}
+                className="btn-secondary flex-1"
+              >
+                Batal
+              </button>
+              <button onClick={confirmDelete} className="btn-danger flex-1">
+                Hapus
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default Classes

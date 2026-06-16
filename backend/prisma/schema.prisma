@@ -1,0 +1,369 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   // ADMIN, TEACHER, PARENT
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  teacher   Teacher?
+  parent    Parent?
+
+  @@map("users")
+}
+
+model Teacher {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  nip         String?  @unique
+  phone       String?
+  address     String?
+  subject     String?
+  educationLevel String // SD, SMP, SMA
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  classes     Class[]  @relation("TeacherClasses")
+  subjectClasses SubjectClass[] @relation("SubjectClassTeacher")
+  grades      Grade[]
+  attendance  Attendance[]
+  schedules   Schedule[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("teachers")
+}
+
+model Parent {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  phone       String?
+  address     String?
+  occupation  String?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  students    Student[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("parents")
+}
+
+model Student {
+  id              String   @id @default(cuid())
+  nis             String   @unique
+  nisn            String?  @unique
+  name            String
+  gender          String   // MALE, FEMALE
+  birthDate       DateTime
+  birthPlace      String?
+  address         String?
+  phone           String?
+  parentId        String
+  classId         String?
+  photo           String?
+
+  parent          Parent   @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  class           Class?   @relation(fields: [classId], references: [id])
+  grades          Grade[]
+  attendance      Attendance[]
+  tahfidz         Tahfidz[]
+  reportCards     ReportCard[]
+  studentAffairs  StudentAffair[]
+  extracurricularEnrollments ExtracurricularEnrollment[]
+
+  enrollmentDate  DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("students")
+}
+
+model Class {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  gradeLevel  Int
+  educationLevel String // SD, SMP, SMA
+  academicYear String
+  homeroomTeacherId String?
+  
+  homeroomTeacher Teacher? @relation("TeacherClasses", fields: [homeroomTeacherId], references: [id])
+  students    Student[]
+  subjects    SubjectClass[]
+  schedules   Schedule[]
+  reportCards ReportCard[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("classes")
+}
+
+model Subject {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  category    String   // GENERAL, ISLAMIC, QURAN, ARABIC
+  educationLevel String // SD, SMP, SMA
+  description String?
+  credits     Int      @default(1)
+
+  subjectClasses SubjectClass[]
+  grades      Grade[]
+  schedules   Schedule[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("subjects")
+}
+
+model SubjectClass {
+  id          String   @id @default(cuid())
+  classId     String
+  subjectId   String
+  teacherId   String?
+
+  class       Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacher     Teacher? @relation("SubjectClassTeacher", fields: [teacherId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([classId, subjectId])
+  @@map("subject_classes")
+}
+
+model Grade {
+  id          String   @id @default(cuid())
+  studentId   String
+  subjectId   String
+  teacherId   String
+  semester    Int
+  academicYear String
+  midExam     Float?
+  finalExam   Float?
+  assignment  Float?
+  project     Float?
+  participation Float?
+  finalScore  Float?
+  grade       String?
+  remarks     String?
+  
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacher     Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([studentId, subjectId, semester, academicYear])
+  @@map("grades")
+}
+
+model Attendance {
+  id          String   @id @default(cuid())
+  studentId   String
+  teacherId   String
+  date        DateTime
+  status      String   // PRESENT, ABSENT, LATE, EXCUSED, SICK
+  notes       String?
+
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacher     Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([studentId, date])
+  @@map("attendance")
+}
+
+model Tahfidz {
+  id          String   @id @default(cuid())
+  studentId   String
+  surah       String
+  ayatFrom    Int
+  ayatTo      Int
+  juz         Int?
+  status      String   // IN_PROGRESS, COMPLETED, REVIEW
+  date        DateTime @default(now())
+  notes       String?
+
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("tahfidz")
+}
+
+model Schedule {
+  id          String   @id @default(cuid())
+  classId     String
+  subjectId   String
+  teacherId   String
+  day         String   // MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY
+  startTime   String   // HH:MM format
+  endTime     String   // HH:MM format
+  room        String?
+  academicYear String
+
+  class       Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacher     Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("schedules")
+}
+
+model PrayerSchedule {
+  id          String   @id @default(cuid())
+  prayerName  String   // SUBUH, DHUHA, ZUHUR, ASHAR, MAGHRIB, ISYA
+  startTime   String   // HH:MM format
+  endTime     String?  // HH:MM format
+  location    String?
+  notes       String?
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("prayer_schedules")
+}
+
+model ReligiousActivity {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  activityType String // JUMAT, PENGAJIAN, RAMADHAN, EID, OTHER
+  date        DateTime
+  location    String?
+  organizer   String?
+  isMandatory Boolean  @default(false)
+  targetAudience String // ALL, STUDENTS, TEACHERS, PARENTS
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("religious_activities")
+}
+
+model Announcement {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  category    String   // GENERAL, ACADEMIC, RELIGIOUS, EVENT, URGENT
+  priority    String   // LOW, MEDIUM, HIGH
+  targetAudience String // ALL, STUDENTS, TEACHERS, PARENTS
+  publishDate DateTime @default(now())
+  expiryDate  DateTime?
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("announcements")
+}
+
+model ReportCard {
+  id          String   @id @default(cuid())
+  studentId   String
+  semester    Int
+  academicYear String
+  classId     String?
+  classRank   Int?
+  gradeAverage Float?
+  behaviorGrade String?
+  behaviorNotes String?
+  attendanceRate Float?
+  totalAbsence Int?
+  principalNotes String?
+  parentNotes String?
+  isPublished Boolean  @default(false)
+  publishedAt DateTime?
+
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class       Class?   @relation(fields: [classId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([studentId, semester, academicYear])
+  @@map("report_cards")
+}
+
+model StudentAffair {
+  id          String   @id @default(cuid())
+  studentId   String
+  type        String   // ACHIEVEMENT, VIOLATION, WARNING, COMMENDATION
+  category    String   // ACADEMIC, BEHAVIOR, DISCIPLINE, ATTENDANCE, OTHER
+  title       String
+  description String
+  date        DateTime @default(now())
+  severity    String   // LOW, MEDIUM, HIGH, CRITICAL
+  points      Int?     // Point system for violations/achievements
+  actionTaken String?
+  resolved    Boolean  @default(false)
+  resolvedAt  DateTime?
+  resolvedBy  String?
+
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("student_affairs")
+}
+
+model Extracurricular {
+  id          String   @id @default(cuid())
+  name        String
+  category    String   // SPORTS, ARTS, ACADEMIC, RELIGIOUS, SKILLS, OTHER
+  description String?
+  schedule    String?
+  instructor  String?
+  fee         Float?
+  maxStudents Int?
+  isActive    Boolean  @default(true)
+
+  enrollments ExtracurricularEnrollment[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("extracurriculars")
+}
+
+model ExtracurricularEnrollment {
+  id          String   @id @default(cuid())
+  studentId   String
+  extracurricularId String
+  enrollmentDate DateTime @default(now())
+  status      String   // ACTIVE, COMPLETED, DROPPED
+  grade       String?
+  notes       String?
+
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  extracurricular Extracurricular @relation(fields: [extracurricularId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([studentId, extracurricularId])
+  @@map("extracurricular_enrollments")
+}
