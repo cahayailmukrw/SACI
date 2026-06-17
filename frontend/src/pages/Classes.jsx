@@ -20,11 +20,26 @@ const Classes = () => {
     academicYear: '',
     homeroomTeacherId: '',
   })
+  const [successMessage, setSuccessMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     fetchClasses()
     fetchTeachers()
   }, [educationLevelFilter])
+
+  // Close modal on escape key press
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        setShowModal(false)
+        setShowDeleteModal(false)
+        setEditingClass(null)
+      }
+    }
+    window.addEventListener('keydown', handleEscape)
+    return () => window.removeEventListener('keydown', handleEscape)
+  }, [])
 
   const fetchClasses = async () => {
     try {
@@ -33,6 +48,7 @@ const Classes = () => {
       setClasses(response.data)
     } catch (error) {
       console.error('Error fetching classes:', error)
+      setClasses([])
     } finally {
       setLoading(false)
     }
@@ -57,13 +73,17 @@ const Classes = () => {
     try {
       if (editingClass) {
         await axios.put(`/api/classes/${editingClass.id}`, formData)
+        setSuccessMessage('Data kelas berhasil diperbarui')
       } else {
         await axios.post('/api/classes', formData)
+        setSuccessMessage('Kelas baru berhasil ditambahkan')
       }
 
       fetchClasses()
       setShowModal(false)
       setEditingClass(null)
+
+      setTimeout(() => setSuccessMessage(''), 5000)
       setFormData({
         name: '',
         gradeLevel: 1,
@@ -73,7 +93,7 @@ const Classes = () => {
       })
     } catch (error) {
       console.error('Error saving class:', error)
-      alert('Gagal menyimpan data kelas')
+      setErrorMessage(error.response?.data?.error || 'Gagal menyimpan data kelas. Silakan coba lagi.')
     }
   }
 
@@ -100,8 +120,11 @@ const Classes = () => {
       fetchClasses()
       setShowDeleteModal(false)
       setClassToDelete(null)
+      setSuccessMessage('Data kelas berhasil dihapus')
+      setTimeout(() => setSuccessMessage(''), 5000)
     } catch (error) {
       console.error('Error deleting class:', error)
+      setErrorMessage('Gagal menghapus data kelas. Silakan coba lagi.')
     }
   }
 
@@ -118,7 +141,24 @@ const Classes = () => {
   }
 
   if (loading) {
-    return <div className="text-center py-8">Memuat data kelas...</div>
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+          <div className="h-8 bg-gray-200 rounded w-48 animate-pulse"></div>
+          <div className="flex space-x-3">
+            <div className="h-10 bg-gray-200 rounded w-32 animate-pulse"></div>
+            <div className="h-10 bg-gray-200 rounded w-32 animate-pulse"></div>
+          </div>
+        </div>
+        <div className="card">
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-12 bg-gray-200 rounded animate-pulse"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // Role-based access control
@@ -132,9 +172,27 @@ const Classes = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Manajemen Kelas</h1>
-        <div className="flex space-x-3">
+      {successMessage && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-4 flex items-center justify-between">
+          <span>{successMessage}</span>
+          <button onClick={() => setSuccessMessage('')} className="text-green-700 hover:text-green-900">
+            ✕
+          </button>
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4 flex items-center justify-between">
+          <span>{errorMessage}</span>
+          <button onClick={() => setErrorMessage('')} className="text-red-700 hover:text-red-900">
+            ✕
+          </button>
+        </div>
+      )}
+
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-0">Manajemen Kelas</h1>
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
           <select
             value={educationLevelFilter}
             onChange={(e) => setEducationLevelFilter(e.target.value)}
@@ -145,7 +203,7 @@ const Classes = () => {
             <option value="SMP">SMP</option>
             <option value="SMA">SMA</option>
           </select>
-          <button onClick={openAddModal} className="btn-primary flex items-center space-x-2">
+          <button onClick={openAddModal} className="btn-primary flex items-center justify-center space-x-2">
             <Plus className="w-4 h-4" />
             <span>Tambah Kelas</span>
           </button>
@@ -153,40 +211,61 @@ const Classes = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {classes.map((classData) => (
-          <div key={classData.id} className="card">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">{classData.name}</h3>
-                <p className="text-sm text-gray-600">{classData.educationLevel} - Kelas {classData.gradeLevel}</p>
-              </div>
-              <div className="flex space-x-2">
-                <button onClick={() => handleEdit(classData)} className="p-2 text-blue-600 hover:bg-blue-50 rounded">
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button onClick={() => handleDelete(classData.id)} className="p-2 text-red-600 hover:bg-red-50 rounded">
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-            <div className="space-y-2 text-sm">
-              <div>
-                <span className="text-gray-600">Tahun Ajaran:</span>
-                <span className="ml-2 font-medium">{classData.academicYear}</span>
-              </div>
-              <div>
-                <span className="text-gray-600">Wali Kelas:</span>
-                <span className="ml-2 font-medium">
-                  {classData.homeroomTeacher?.user.name || '-'}
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-600">Jumlah Siswa:</span>
-                <span className="ml-2 font-medium">{classData.students.length}</span>
-              </div>
-            </div>
+        {classes.length === 0 ? (
+          <div className="col-span-full text-center py-12">
+            <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Tidak ada data kelas</h3>
+            <p className="text-gray-500 mb-4">
+              {educationLevelFilter
+                ? 'Tidak ada kelas yang sesuai dengan filter jenjang.'
+                : 'Belum ada data kelas. Mulai dengan menambahkan kelas baru.'}
+            </p>
+            {!educationLevelFilter && (
+              <button
+                onClick={openAddModal}
+                className="btn-primary inline-flex items-center space-x-2"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Tambah Kelas</span>
+              </button>
+            )}
           </div>
-        ))}
+        ) : (
+          classes.map((classData) => (
+            <div key={classData.id} className="card">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">{classData.name}</h3>
+                  <p className="text-sm text-gray-600">{classData.educationLevel} - Kelas {classData.gradeLevel}</p>
+                </div>
+                <div className="flex space-x-2">
+                  <button onClick={() => handleEdit(classData)} className="p-2 text-blue-600 hover:bg-blue-50 rounded">
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => handleDelete(classData.id)} className="p-2 text-red-600 hover:bg-red-50 rounded">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="text-gray-600">Tahun Ajaran:</span>
+                  <span className="ml-2 font-medium">{classData.academicYear}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Wali Kelas:</span>
+                  <span className="ml-2 font-medium">
+                    {classData.homeroomTeacher?.user.name || '-'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Jumlah Siswa:</span>
+                  <span className="ml-2 font-medium">{classData.students.length}</span>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {showModal && (
