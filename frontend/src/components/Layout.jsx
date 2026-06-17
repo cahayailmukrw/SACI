@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useState } from 'react'
 import {
   LayoutDashboard,
   Users,
@@ -15,12 +16,15 @@ import {
   Key,
   FileText,
   Shield,
-  Trophy
+  Trophy,
+  Menu,
+  X
 } from 'lucide-react'
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth()
   const location = useLocation()
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   const navItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['ADMIN', 'TEACHER', 'PARENT'] },
@@ -51,12 +55,18 @@ const Layout = ({ children }) => {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="lg:hidden p-2 hover:bg-primary-700 rounded-lg"
+              >
+                {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
               <GraduationCap className="w-8 h-8" />
               <span className="text-xl font-bold">SACI</span>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm">{user?.name}</span>
-              <span className="px-3 py-1 bg-primary-700 rounded-full text-xs">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <span className="text-sm hidden sm:inline">{user?.name}</span>
+              <span className="px-2 py-1 sm:px-3 sm:py-1 bg-primary-700 rounded-full text-xs">
                 {user?.role}
               </span>
               <button
@@ -64,7 +74,7 @@ const Layout = ({ children }) => {
                 className="flex items-center space-x-1 hover:text-primary-200"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="text-sm">Logout</span>
+                <span className="text-sm hidden sm:inline">Logout</span>
               </button>
             </div>
           </div>
@@ -72,7 +82,19 @@ const Layout = ({ children }) => {
       </nav>
 
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-64 bg-white shadow-lg overflow-y-auto">
+        {/* Mobile sidebar overlay */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
+        {/* Sidebar */}
+        <aside
+          className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}
+        >
           <nav className="p-4">
             <ul className="space-y-2">
               {filteredNavItems.map((item) => {
@@ -82,6 +104,7 @@ const Layout = ({ children }) => {
                   <li key={item.path}>
                     <Link
                       to={item.path}
+                      onClick={() => setIsSidebarOpen(false)}
                       className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${isActive
                         ? 'bg-primary-100 text-primary-800'
                         : 'text-gray-700 hover:bg-gray-100'
@@ -97,7 +120,8 @@ const Layout = ({ children }) => {
           </nav>
         </aside>
 
-        <main className="flex-1 p-8 overflow-y-auto">
+        {/* Main content */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
           {children}
         </main>
       </div>
