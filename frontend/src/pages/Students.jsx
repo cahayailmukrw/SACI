@@ -25,6 +25,7 @@ const Students = () => {
     address: '',
     parentId: '',
     classId: '',
+    educationLevel: '',
     parentName: '',
     parentPhone: '',
     parentAddress: '',
@@ -53,7 +54,8 @@ const Students = () => {
 
   const fetchStudents = async () => {
     try {
-      const response = await axios.get('/api/students')
+      const params = educationLevelFilter ? { educationLevel: educationLevelFilter } : {}
+      const response = await axios.get('/api/students', { params })
       setStudents(response.data)
     } catch (error) {
       console.error('Error fetching students:', error)
@@ -74,20 +76,9 @@ const Students = () => {
   }
 
   const filteredStudents = students.filter(
-    (student) => {
-      const matchesSearch =
-        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.nis.includes(searchTerm)
-      const matchesEducationLevel =
-        !educationLevelFilter ||
-        (student.class && student.class.educationLevel === educationLevelFilter)
-
-      if (educationLevelFilter) {
-        console.log('Filter:', educationLevelFilter, 'Student:', student.name, 'Class:', student.class?.educationLevel, 'Matches:', matchesEducationLevel)
-      }
-
-      return matchesSearch && matchesEducationLevel
-    }
+    (student) =>
+      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.nis.includes(searchTerm)
   )
 
   const generateEmail = (nis) => {
@@ -113,6 +104,7 @@ const Students = () => {
         phone: formData.phone,
         address: formData.address,
         classId: formData.classId,
+        educationLevel: formData.educationLevel,
         parent: {
           phone: formData.parentPhone,
           address: formData.parentAddress,
@@ -151,6 +143,7 @@ const Students = () => {
         address: '',
         parentId: '',
         classId: '',
+        educationLevel: '',
         parentName: '',
         parentPhone: '',
         parentAddress: '',
@@ -175,6 +168,7 @@ const Students = () => {
       address: student.address || '',
       parentId: student.parentId || '',
       classId: student.classId || '',
+      educationLevel: student.educationLevel || '',
       parentName: student.parent.user.name,
       parentPhone: student.parent.phone || '',
       parentAddress: student.parent.address || '',
@@ -196,6 +190,7 @@ const Students = () => {
       address: '',
       parentId: '',
       classId: '',
+      educationLevel: '',
       parentName: '',
       parentPhone: '',
       parentAddress: '',
@@ -333,7 +328,7 @@ const Students = () => {
                   <td className="font-medium">{student.name}</td>
                   <td className="hidden sm:table-cell">{student.gender === 'MALE' ? 'Laki-laki' : 'Perempuan'}</td>
                   <td>{student.class?.name || '-'}</td>
-                  <td className="hidden md:table-cell">{student.class?.educationLevel || '-'}</td>
+                  <td className="hidden md:table-cell">{student.educationLevel || '-'}</td>
                   <td className="hidden lg:table-cell">{student.parent.user.name}</td>
                   <td>
                     <div className="flex space-x-1 sm:space-x-2">
@@ -460,6 +455,23 @@ const Students = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Jenjang Pendidikan
+                </label>
+                <select
+                  name="educationLevel"
+                  value={formData.educationLevel}
+                  onChange={handleInputChange}
+                  required
+                  className="input-field"
+                >
+                  <option value="">Pilih Jenjang</option>
+                  <option value="SD">SD</option>
+                  <option value="SMP">SMP</option>
+                  <option value="SMA">SMA</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Kelas
                 </label>
                 <select
@@ -578,6 +590,7 @@ const Students = () => {
                       address: '',
                       parentId: '',
                       classId: '',
+                      educationLevel: '',
                       parentName: '',
                       parentPhone: '',
                       parentAddress: '',

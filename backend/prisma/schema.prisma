@@ -73,6 +73,7 @@ model Student {
   parentId        String
   classId         String?
   photo           String?
+  educationLevel  String   // SD, SMP, SMA
 
   parent          Parent   @relation(fields: [parentId], references: [id], onDelete: Cascade)
   class           Class?   @relation(fields: [classId], references: [id])

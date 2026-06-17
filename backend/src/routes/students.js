@@ -6,7 +6,11 @@ const router = express.Router();
 
 router.get('/', authenticate, async (req, res) => {
   try {
+    const { educationLevel } = req.query;
+    const where = educationLevel ? { educationLevel } : {};
+
     const students = await prisma.student.findMany({
+      where,
       include: {
         parent: { include: { user: true } },
         class: true,
@@ -43,7 +47,7 @@ router.get('/:id', authenticate, async (req, res) => {
 
 router.post('/', authenticate, authorize('ADMIN'), async (req, res) => {
   try {
-    const { nis, nisn, name, gender, birthDate, birthPlace, address, phone, parentId, classId } = req.body;
+    const { nis, nisn, name, gender, birthDate, birthPlace, address, phone, parentId, classId, educationLevel } = req.body;
 
     const student = await prisma.student.create({
       data: {
@@ -57,6 +61,7 @@ router.post('/', authenticate, authorize('ADMIN'), async (req, res) => {
         phone,
         parentId,
         classId,
+        educationLevel,
       },
       include: {
         parent: { include: { user: true } },
@@ -72,7 +77,7 @@ router.post('/', authenticate, authorize('ADMIN'), async (req, res) => {
 
 router.put('/:id', authenticate, authorize('ADMIN'), async (req, res) => {
   try {
-    const { name, gender, birthDate, birthPlace, address, phone, classId } = req.body;
+    const { name, gender, birthDate, birthPlace, address, phone, classId, educationLevel } = req.body;
 
     const student = await prisma.student.update({
       where: { id: req.params.id },
@@ -84,6 +89,7 @@ router.put('/:id', authenticate, authorize('ADMIN'), async (req, res) => {
         address,
         phone,
         classId,
+        educationLevel,
       },
       include: {
         parent: { include: { user: true } },
