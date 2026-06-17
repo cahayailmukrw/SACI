@@ -79,11 +79,6 @@ const Login = () => {
             {loading ? 'Masuk...' : 'Masuk'}
           </button>
         </form>
-
-        <div className="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-gray-600">
-          <p>Akun Demo:</p>
-          <p className="mt-1 break-all">admin@cahayailmu.sch.id / admin123</p>
-        </div>
       </div>
     </div>
   )
