@@ -21,10 +21,25 @@ const Teachers = () => {
     address: '',
     educationLevel: 'SD',
   })
+  const [successMessage, setSuccessMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     fetchTeachers()
   }, [educationLevelFilter])
+
+  // Close modal on escape key press
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        setShowModal(false)
+        setShowDeleteModal(false)
+        setEditingTeacher(null)
+      }
+    }
+    window.addEventListener('keydown', handleEscape)
+    return () => window.removeEventListener('keydown', handleEscape)
+  }, [])
 
   const fetchTeachers = async () => {
     try {
@@ -33,6 +48,7 @@ const Teachers = () => {
       setTeachers(response.data)
     } catch (error) {
       console.error('Error fetching teachers:', error)
+      setTeachers([])
     } finally {
       setLoading(false)
     }
@@ -72,13 +88,17 @@ const Teachers = () => {
 
       if (editingTeacher) {
         await axios.put(`/api/teachers/${editingTeacher.id}`, teacherData)
+        setSuccessMessage('Data guru berhasil diperbarui')
       } else {
         await axios.post('/api/teachers', teacherData)
+        setSuccessMessage('Guru baru berhasil ditambahkan')
       }
 
       fetchTeachers()
       setShowModal(false)
       setEditingTeacher(null)
+
+      setTimeout(() => setSuccessMessage(''), 5000)
       setFormData({
         nip: '',
         name: '',
@@ -89,7 +109,7 @@ const Teachers = () => {
       })
     } catch (error) {
       console.error('Error saving teacher:', error)
-      alert('Gagal menyimpan data guru')
+      setErrorMessage(error.response?.data?.error || 'Gagal menyimpan data guru. Silakan coba lagi.')
     }
   }
 
@@ -117,8 +137,11 @@ const Teachers = () => {
       fetchTeachers()
       setShowDeleteModal(false)
       setTeacherToDelete(null)
+      setSuccessMessage('Data guru berhasil dihapus')
+      setTimeout(() => setSuccessMessage(''), 5000)
     } catch (error) {
       console.error('Error deleting teacher:', error)
+      setErrorMessage('Gagal menghapus data guru. Silakan coba lagi.')
     }
   }
 
@@ -136,7 +159,27 @@ const Teachers = () => {
   }
 
   if (loading) {
-    return <div className="text-center py-8">Memuat data guru...</div>
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+          <div className="h-8 bg-gray-200 rounded w-48 animate-pulse"></div>
+          <div className="h-10 bg-gray-200 rounded w-32 animate-pulse"></div>
+        </div>
+        <div className="card">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+        </div>
+        <div className="card">
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-12 bg-gray-200 rounded animate-pulse"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // Role-based access control
@@ -150,6 +193,24 @@ const Teachers = () => {
 
   return (
     <div>
+      {successMessage && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-4 flex items-center justify-between">
+          <span>{successMessage}</span>
+          <button onClick={() => setSuccessMessage('')} className="text-green-700 hover:text-green-900">
+            ✕
+          </button>
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4 flex items-center justify-between">
+          <span>{errorMessage}</span>
+          <button onClick={() => setErrorMessage('')} className="text-red-700 hover:text-red-900">
+            ✕
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-0">Manajemen Guru</h1>
         <button onClick={openAddModal} className="btn-primary flex items-center justify-center space-x-2">
@@ -184,41 +245,62 @@ const Teachers = () => {
       </div>
 
       <div className="card overflow-x-auto">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>NIP</th>
-              <th>Nama</th>
-              <th className="hidden sm:table-cell">Email</th>
-              <th>Jenjang</th>
-              <th className="hidden md:table-cell">Mata Pelajaran</th>
-              <th className="hidden lg:table-cell">Telepon</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredTeachers.map((teacher) => (
-              <tr key={teacher.id}>
-                <td className="font-medium">{teacher.nip || '-'}</td>
-                <td className="font-medium">{teacher.user.name}</td>
-                <td className="hidden sm:table-cell">{teacher.user.email}</td>
-                <td>{teacher.educationLevel || '-'}</td>
-                <td className="hidden md:table-cell">{teacher.subject || '-'}</td>
-                <td className="hidden lg:table-cell">{teacher.phone || '-'}</td>
-                <td>
-                  <div className="flex space-x-1 sm:space-x-2">
-                    <button onClick={() => handleEdit(teacher)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => handleDelete(teacher.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
+        {filteredTeachers.length === 0 ? (
+          <div className="text-center py-12">
+            <GraduationCap className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Tidak ada data guru</h3>
+            <p className="text-gray-500 mb-4">
+              {searchTerm || educationLevelFilter
+                ? 'Tidak ada guru yang sesuai dengan pencarian atau filter.'
+                : 'Belum ada data guru. Mulai dengan menambahkan guru baru.'}
+            </p>
+            {!searchTerm && !educationLevelFilter && (
+              <button
+                onClick={openAddModal}
+                className="btn-primary inline-flex items-center space-x-2"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Tambah Guru</span>
+              </button>
+            )}
+          </div>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>NIP</th>
+                <th>Nama</th>
+                <th className="hidden sm:table-cell">Email</th>
+                <th>Jenjang</th>
+                <th className="hidden md:table-cell">Mata Pelajaran</th>
+                <th className="hidden lg:table-cell">Telepon</th>
+                <th>Aksi</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredTeachers.map((teacher) => (
+                <tr key={teacher.id}>
+                  <td className="font-medium">{teacher.nip || '-'}</td>
+                  <td className="font-medium">{teacher.user.name}</td>
+                  <td className="hidden sm:table-cell">{teacher.user.email}</td>
+                  <td>{teacher.educationLevel || '-'}</td>
+                  <td className="hidden md:table-cell">{teacher.subject || '-'}</td>
+                  <td className="hidden lg:table-cell">{teacher.phone || '-'}</td>
+                  <td>
+                    <div className="flex space-x-1 sm:space-x-2">
+                      <button onClick={() => handleEdit(teacher)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => handleDelete(teacher.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {showModal && (
