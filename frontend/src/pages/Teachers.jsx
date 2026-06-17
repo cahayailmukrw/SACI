@@ -150,17 +150,17 @@ const Teachers = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Manajemen Guru</h1>
-        <button onClick={openAddModal} className="btn-primary flex items-center space-x-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-0">Manajemen Guru</h1>
+        <button onClick={openAddModal} className="btn-primary flex items-center justify-center space-x-2">
           <Plus className="w-4 h-4" />
           <span>Tambah Guru</span>
         </button>
       </div>
 
       <div className="card mb-6">
-        <div className="flex space-x-4">
-          <div className="relative flex-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
@@ -189,28 +189,28 @@ const Teachers = () => {
             <tr>
               <th>NIP</th>
               <th>Nama</th>
-              <th>Email</th>
+              <th className="hidden sm:table-cell">Email</th>
               <th>Jenjang</th>
-              <th>Mata Pelajaran</th>
-              <th>Telepon</th>
+              <th className="hidden md:table-cell">Mata Pelajaran</th>
+              <th className="hidden lg:table-cell">Telepon</th>
               <th>Aksi</th>
             </tr>
           </thead>
           <tbody>
             {filteredTeachers.map((teacher) => (
               <tr key={teacher.id}>
-                <td>{teacher.nip || '-'}</td>
+                <td className="font-medium">{teacher.nip || '-'}</td>
                 <td className="font-medium">{teacher.user.name}</td>
-                <td>{teacher.user.email}</td>
+                <td className="hidden sm:table-cell">{teacher.user.email}</td>
                 <td>{teacher.educationLevel || '-'}</td>
-                <td>{teacher.subject || '-'}</td>
-                <td>{teacher.phone || '-'}</td>
+                <td className="hidden md:table-cell">{teacher.subject || '-'}</td>
+                <td className="hidden lg:table-cell">{teacher.phone || '-'}</td>
                 <td>
-                  <div className="flex space-x-2">
-                    <button onClick={() => handleEdit(teacher)} className="p-2 text-blue-600 hover:bg-blue-50 rounded">
+                  <div className="flex space-x-1 sm:space-x-2">
+                    <button onClick={() => handleEdit(teacher)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
                       <Edit className="w-4 h-4" />
                     </button>
-                    <button onClick={() => handleDelete(teacher.id)} className="p-2 text-red-600 hover:bg-red-50 rounded">
+                    <button onClick={() => handleDelete(teacher.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
@@ -222,8 +222,8 @@ const Teachers = () => {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">
               {editingTeacher ? 'Edit Guru' : 'Tambah Guru'}
             </h2>
