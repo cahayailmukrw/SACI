@@ -74,9 +74,14 @@ const Students = () => {
   }
 
   const filteredStudents = students.filter(
-    (student) =>
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.nis.includes(searchTerm)
+    (student) => {
+      const matchesSearch =
+        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        student.nis.includes(searchTerm)
+      const matchesEducationLevel =
+        !educationLevelFilter || student.class?.educationLevel === educationLevelFilter
+      return matchesSearch && matchesEducationLevel
+    }
   )
 
   const generateEmail = (nis) => {
