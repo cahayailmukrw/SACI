@@ -79,7 +79,13 @@ const Students = () => {
         student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         student.nis.includes(searchTerm)
       const matchesEducationLevel =
-        !educationLevelFilter || student.class?.educationLevel === educationLevelFilter
+        !educationLevelFilter ||
+        (student.class && student.class.educationLevel === educationLevelFilter)
+
+      if (educationLevelFilter) {
+        console.log('Filter:', educationLevelFilter, 'Student:', student.name, 'Class:', student.class?.educationLevel, 'Matches:', matchesEducationLevel)
+      }
+
       return matchesSearch && matchesEducationLevel
     }
   )
