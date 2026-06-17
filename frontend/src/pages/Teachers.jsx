@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { Plus, Edit, Trash2, Search } from 'lucide-react'
+import { Plus, Edit, Trash2, Search, GraduationCap } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 const Teachers = () => {
