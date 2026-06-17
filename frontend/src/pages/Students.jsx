@@ -465,9 +465,9 @@ const Students = () => {
                   className="input-field"
                 >
                   <option value="">Pilih Jenjang</option>
-                  <option value="SD">SD</option>
-                  <option value="SMP">SMP</option>
-                  <option value="SMA">SMA</option>
+                  <option value="SD">SD (Sekolah Dasar)</option>
+                  <option value="SMP">SMP (Sekolah Menengah Pertama)</option>
+                  <option value="SMA">SMA (Sekolah Menengah Atas)</option>
                 </select>
               </div>
               <div>
