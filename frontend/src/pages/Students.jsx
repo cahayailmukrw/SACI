@@ -187,11 +187,11 @@ const Students = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Manajemen Siswa</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-0">Manajemen Siswa</h1>
         <button
           onClick={openAddModal}
-          className="btn-primary flex items-center space-x-2"
+          className="btn-primary flex items-center justify-center space-x-2"
         >
           <Plus className="w-4 h-4" />
           <span>Tambah Siswa</span>
@@ -199,17 +199,17 @@ const Students = () => {
       </div>
 
       <div className="card mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Cari siswa berdasarkan nama atau NIS..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="input-field pl-10"
-          />
-        </div>
-        <div className="mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Cari siswa berdasarkan nama atau NIS..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="input-field pl-10"
+            />
+          </div>
           <select
             value={educationLevelFilter}
             onChange={(e) => setEducationLevelFilter(e.target.value)}
@@ -228,39 +228,39 @@ const Students = () => {
           <thead>
             <tr>
               <th>NIS</th>
-              <th>NISN</th>
               <th>Nama</th>
-              <th>Gender</th>
+              <th className="hidden sm:table-cell">Gender</th>
               <th>Kelas</th>
-              <th>Jenjang</th>
-              <th>Orang Tua</th>
+              <th className="hidden md:table-cell">Jenjang</th>
+              <th className="hidden lg:table-cell">Orang Tua</th>
               <th>Aksi</th>
             </tr>
           </thead>
           <tbody>
             {filteredStudents.map((student) => (
               <tr key={student.id}>
-                <td>{student.nis}</td>
-                <td>{student.nisn || '-'}</td>
+                <td className="font-medium">{student.nis}</td>
                 <td className="font-medium">{student.name}</td>
-                <td>{student.gender === 'MALE' ? 'Laki-laki' : 'Perempuan'}</td>
+                <td className="hidden sm:table-cell">{student.gender === 'MALE' ? 'Laki-laki' : 'Perempuan'}</td>
                 <td>{student.class?.name || '-'}</td>
-                <td>{student.class?.educationLevel || '-'}</td>
-                <td>{student.parent.user.name}</td>
+                <td className="hidden md:table-cell">{student.class?.educationLevel || '-'}</td>
+                <td className="hidden lg:table-cell">{student.parent.user.name}</td>
                 <td>
-                  <div className="flex space-x-2">
+                  <div className="flex space-x-1 sm:space-x-2">
                     <button
                       onClick={() => {
                         setEditingStudent(student)
                         setShowModal(true)
                       }}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Edit"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(student.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded"
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Hapus"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -273,13 +273,13 @@ const Students = () => {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-4 sm:p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">
               {editingStudent ? 'Edit Siswa' : 'Tambah Siswa'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     NIS (Nomor Induk Siswa)
@@ -507,8 +507,8 @@ const Students = () => {
       )}
 
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-4 sm:p-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">Konfirmasi Hapus</h2>
             <p className="text-gray-600 mb-6">
               Apakah Anda yakin ingin menghapus siswa ini? Tindakan ini tidak dapat dibatalkan.
